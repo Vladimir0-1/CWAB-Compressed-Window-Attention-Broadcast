@@ -1,35 +1,25 @@
 """
 Example: Replace BERT's attention with HSA
 Shows how to plug HSA into any transformer model.
+Run this to verify HSA works as a drop-in replacement.
 """
 
 import torch
 from transformers import AutoModel, AutoTokenizer
 import sys
 import os
+import time
 
-# Add parent directory to path to import hsa
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from hsa import HybridStateSpaceAttention
 
 
 def replace_bert_attention(model, window_size=512, num_global_tokens=64):
-    """
-    Replace all attention layers in BERT-style model with HSA.
-    
-    Args:
-        model: HuggingFace BERT-like model
-        window_size: Local attention window size
-        num_global_tokens: Number of compressed global tokens
-    
-    Returns:
-        Model with HSA attention
-    """
+    """Replace all attention layers in BERT-style model with HSA."""
     for layer in model.encoder.layer:
         old_attn = layer.attention.self
         
-        # Create HSA with same dimensions
         new_attn = HybridStateSpaceAttention(
             hidden_size=old_attn.query.out_features,
             num_heads=old_attn.num_attention_heads,
@@ -38,54 +28,54 @@ def replace_bert_attention(model, window_size=512, num_global_tokens=64):
             dropout=old_attn.dropout.p if hasattr(old_attn, 'dropout') else 0.1,
         )
         
-        # Replace
         layer.attention.self = new_attn
     
     return model
 
 
 def main():
-    print("Loading BERT model...")
+    print("=" * 60)
+    print("HSA: BERT Attention Replacement Demo")
+    print("=" * 60)
+    
+    device = 'cuda' if torch.cuda.is_available() else 'cpu'
+    print(f"Device: {device}")
+    
+    # Load model
+    print("\n1. Loading BERT model...")
     model_name = "bert-base-uncased"
-    model = AutoModel.from_pretrained(model_name)
+    model = AutoModel.from_pretrained(model_name).to(device)
     tokenizer = AutoTokenizer.from_pretrained(model_name)
     
-    # Count parameters
     original_params = sum(p.numel() for p in model.parameters())
-    print(f"Original model parameters: {original_params:,}")
+    print(f"   Original parameters: {original_params:,}")
     
     # Replace attention
-    print("Replacing attention with HSA...")
+    print("\n2. Replacing attention with HSA...")
     model = replace_bert_attention(model, window_size=512, num_global_tokens=64)
     
-    # Verify replacement
     new_params = sum(p.numel() for p in model.parameters())
-    print(f"HSA model parameters: {new_params:,}")
-    print(f"Parameter change: {new_params - original_params:+,}")
+    print(f"   New parameters: {new_params:,}")
+    print(f"   Change: {new_params - original_params:+,}")
     
-    # Test forward pass with long sequence
-    print("\nTesting forward pass with long sequence (4096 tokens)...")
-    dummy_text = "Hello world. " * 512  # ~4096 tokens
-    inputs = tokenizer(dummy_text, return_tensors="pt", truncation=True, max_length=4096)
+    # Test with different sequence lengths
+    print("\n3. Testing forward pass...")
+    test_lengths = [128, 256, 512, 1024]
     
-    with torch.no_grad():
-        outputs = model(**inputs)
-    
-    print(f"Output shape: {outputs.last_hidden_state.shape}")
-    print(" HSA works! Forward pass completed.")
-    
-    # Optional: benchmark
-    import time
-    print("\nBenchmarking (3 runs)...")
-    times = []
-    for _ in range(3):
-        start = time.time()
+    for seq_len in test_lengths:
+        text = "Hello world. " * (seq_len // 3)
+        inputs = tokenizer(text, return_tensors="pt", truncation=True, max_length=seq_len).to(device)
+        
         with torch.no_grad():
-            _ = model(**inputs)
-        times.append(time.time() - start)
+            start = time.time()
+            outputs = model(**inputs)
+            elapsed = (time.time() - start) * 1000
+        
+        print(f"   Seq len {seq_len:4d}: {elapsed:.2f} ms | Output shape: {outputs.last_hidden_state.shape}")
     
-    print(f"Average inference time: {sum(times)/len(times):.3f} seconds")
-    print(f"Memory usage: {torch.cuda.memory_allocated()/1e9 if torch.cuda.is_available() else 'CPU mode'}")
+    print("\n HSA works as a drop-in replacement for BERT attention.")
+    print("   Note: Speed comparison with original BERT is not shown here.")
+    print("   Run hsa_demo.ipynb or hsa_demo.py for full benchmarks.")
 
 
 if __name__ == "__main__":
