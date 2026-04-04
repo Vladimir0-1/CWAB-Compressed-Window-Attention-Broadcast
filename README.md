@@ -1,3 +1,6 @@
+[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/Vladimir0-1/Hybrid-State-Space-Attention-HSA-/blob/main/examples/hsa_demo.ipynb)
+
+
 # Hybrid State-Space Attention (HSA)
 
 **An architectural pattern for linear-complexity attention with collective memory and dream-based self-improvement.**
