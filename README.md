@@ -44,19 +44,16 @@ Replace standard multi-head attention in any transformer.
 
 
 
-## 📊 Benchmark (T4 GPU)
+### CPU Benchmark (T4, CPU-only)
 
-### Speed & Memory
-
-| Seq Len | Standard (ms) | CWAB (ms) | Speedup | Std Mem (MB) | CWAB Mem (MB) |
-|---------|--------------|-----------|---------|--------------|----------------|
-| 128 | 7.96 | 7.54 | 1.1x | 86 | 123 |
-| 256 | 7.76 | 7.70 | 1.0x | 152 | 141 |
-| 512 | 10.60 | 10.14 | 1.0x | 245 | 201 |
-| 1024 | 25.71 | 22.37 | 1.1x | 561 | 414 |
-| 2048 | 77.68 | 33.36 | **2.3x** | 1664 | 559 |
-| 4096 | 263.57 | 64.87 | **4.1x** | 5980 | 995 |
-| 8192 | OOM | 0.01 | — | — | ~1100 |
+| Seq Len | Standard (ms) | CWAB (ms) | Speedup |
+|---------|--------------|-----------|---------|
+| 128 | 273.6 | 202.9 | 1.3x |
+| 256 | 456.7 | 330.3 | 1.4x |
+| 512 | 888.3 | 396.9 | **2.2x** |
+| 1024 | 2115.4 | 1398.8 | 1.5x |
+| 2048 | 7339.8 | 1758.5 | **4.2x** |
+| 4096 | 27400.6 | 3605.4 | **7.6x** |
 
 ![Speed Benchmark](honest_benchmark.png)
 *Lower is better. Standard attention OOM at 8192.*
