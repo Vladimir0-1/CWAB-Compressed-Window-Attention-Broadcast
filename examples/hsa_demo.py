@@ -5,6 +5,7 @@ No cherry-picking. Multiple metrics. Draw your own conclusions.
 Usage: python examples/hsa_demo.py
 """
 
+import numpy as np
 import torch
 import torch.nn as nn
 import time
