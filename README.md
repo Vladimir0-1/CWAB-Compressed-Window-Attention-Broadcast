@@ -1,23 +1,26 @@
 [![Donate](https://img.shields.io/badge/Donate-Boosty-orange)](https://www.donationalerts.com/c/vladimir0_1) 
-[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/Vladimir0-1/CWAB-Compressed-Window-Attention-Broadcast/blob/main/examples/cwab_demo.ipynb) 
-# Hybrid State-Space Attention (HSSA)
+[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/Vladimir0-1/CWAB-Compressed-Window-Attention-Broadcast/blob/main/examples/cwab_demo.ipynb)
+
+# CWAB - Compressed Window Attention Broadcast
 
 **Plug-and-play attention mechanism. Linear complexity. Runs on consumer GPUs.**
 
 Replace standard multi-head attention in any transformer.
 
 
-## Not to be confused
 
-|                      | **HSA** (other)                              | **HSSA** (this repository)                   |
+## Not to be confused with State-Space Models
+
+|                      | **SSM-based (Mamba, S4)**                    | **CWAB (this repository)**                   |
 |----------------------|----------------------------------------------|----------------------------------------------|
-| **Full name**        | Hybrid State-Space Attention                 | Hybrid State-Space Attention                 |
+| **Full name**        | State-Space Models + Attention               | Compressed Window Attention Broadcast        |
 | **Based on**         | SSM (Mamba, S4) + attention                  | Sliding window + compression + broadcast     |
 | **Mechanism**        | Recurrent state                              | Direct windowed attention                    |
 | **Complexity**       | O(n)                                         | O(n)                                         |
 | **Memory**           | Fixed-size state                             | Learnable memory tokens                      |
 
-> **Note:** Despite the similar name, this is a **different architecture**. No SSM or recurrent state is used.
+> **Note:** CWAB is a **different architecture**. No SSM or recurrent state is used.
+
 
 
 ## Core Concepts
@@ -26,24 +29,27 @@ Replace standard multi-head attention in any transformer.
 |-----------|----------|
 | **Sliding Window** | Local context, O(n×window) |
 | **Compressed Attention** | Global context via learnable centroids |
+| **Information Broadcast** | Exponential diffusion, O(n log n) |
 | **Adaptive Mixing** | Learnable gates balance local/global |
 | **Short-Sequence Fallback** | Full attention for <1024 tokens |
 
 
+
 ## Complexity
 
-| Operation | Standard Attention | HSSA |
-|-----------|--------------------|-----|
+| Operation | Standard Attention | CWAB |
+|-----------|--------------------|------|
 | Per token | O(n) | O(1) |
 | Full sequence | O(n²) | **O(n)** |
+
 
 
 ## 📊 Benchmark (T4 GPU)
 
 ### Speed & Memory
 
-| Seq Len | Standard (ms) | HSSA (ms) | Speedup | Std Mem (MB) | HSSA Mem (MB) |
-|---------|--------------|----------|---------|--------------|--------------|
+| Seq Len | Standard (ms) | CWAB (ms) | Speedup | Std Mem (MB) | CWAB Mem (MB) |
+|---------|--------------|-----------|---------|--------------|----------------|
 | 128 | 7.96 | 7.54 | 1.1x | 86 | 123 |
 | 256 | 7.76 | 7.70 | 1.0x | 152 | 141 |
 | 512 | 10.60 | 10.14 | 1.0x | 245 | 201 |
@@ -52,7 +58,7 @@ Replace standard multi-head attention in any transformer.
 | 4096 | 263.57 | 64.87 | **4.1x** | 5980 | 995 |
 | 8192 | OOM | 0.01 | — | — | ~1100 |
 
-![Speed Benchmark](honest_benchmark_hssa.png)
+![Speed Benchmark](honest_benchmark.png)
 *Lower is better. Standard attention OOM at 8192.*
 
 ### Training Convergence (WikiText-2, 3 epochs)
@@ -60,29 +66,28 @@ Replace standard multi-head attention in any transformer.
 | Model | Final Loss |
 |-------|------------|
 | Standard Attention | 0.0006 |
-| HSSA | 0.0001 |
+| CWAB | 0.0001 |
 
-![Convergence](convergence_hssa.png)
+![Convergence](convergence.png)
 *Both models converge to comparable loss.*
 
 
 
 ## Key Takeaways
 
-- **Short contexts (<1024):** HSSA matches standard attention (no overhead)
-- **Long contexts (2048-4096):** HSSA is **2-4x faster** and uses **3-6x less memory**
-- **Very long contexts (8192+):** Standard OOM, HSSA works
+- **Short contexts (<1024):** CWAB matches standard attention (no overhead)
+- **Long contexts (2048-4096):** CWAB is **2-4x faster** and uses **3-6x less memory**
+- **Very long contexts (8192+):** Standard OOM, CWAB works
 
 
 
 ## Quick Start
 
-```
-from hssa import HybridStateSpaceAttention
-```
+```python
+from cwab import CWAB
+
 # Replace your attention layer
-```
-model.attention = HybridStateSpaceAttention(
+model.attention = CWAB(
     hidden_size=768,
     num_heads=12,
     window_size=512,
@@ -92,13 +97,15 @@ model.attention = HybridStateSpaceAttention(
 
 ## Run the Benchmark
 
-[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/Vladimir0-1/Hybrid-State-Space-Attention-HSA-/blob/main/examples/hssa_demo.ipynb)
+[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/Vladimir0-1/CWAB-Compressed-Window-Attention-Broadcast/blob/main/examples/cwab_demo.ipynb)
 
 Click the badge to reproduce results on your own hardware.
 
+
+
 ## Multi-Agent Extension (Sleepy Agent Legion)
 
-HSSA can be extended to a multi-agent system where agents **work, sleep, and dream**.
+CWAB can be extended to a multi-agent system where agents **work, sleep, and dream**.
 
 ### How It Works
 
@@ -124,8 +131,8 @@ HSSA can be extended to a multi-agent system where agents **work, sleep, and dre
 
 ### Example
 
-```
-from hssa import SleepyAgentLegion
+```python
+from cwab import SleepyAgentLegion
 
 legion = SleepyAgentLegion(
     num_agents=7,
@@ -134,30 +141,30 @@ legion = SleepyAgentLegion(
 )
 ```
 
-### How It Works
+---
 
-HSSA combines four mechanisms to achieve linear complexity:
+## How CWAB Works
+
+CWAB combines four mechanisms to achieve linear complexity:
+
 ```
 Input Sequence (n tokens)
                    ↓
-         Sliding Window -> Local context (O(n×window))
+         Sliding Window → Local context (O(n×window))
                    ↓
-         Compressed Attention -> Global context via k-means centroids (O(n×k))
+    Compressed Attention → Global context via k-means centroids (O(n×k))
                    ↓
-         Information Broadcast -> Exponential diffusion (O(n log n))
+    Information Broadcast → Exponential diffusion (O(n log n))
                    ↓
-         Adaptive Mixing -> Learnable gates balance local/global
+       Adaptive Mixing → Learnable gates balance local/global
                    ↓     
               Output (n tokens)
 ```
 
-
-
-
-### Why this works
+### Why This Works
 
 | Mechanism | What it does | Complexity |
-|-----------|--------------|-------------|
+|-----------|--------------|------------|
 | **Sliding Window** | Each token attends to neighbors within window | O(n × window) |
 | **Compressed Attention** | Sequence → k centroids → cross-attention | O(n × k) |
 | **Information Broadcast** | Exponential message passing (like graph diffusion) | O(n log n) |
@@ -167,7 +174,7 @@ Input Sequence (n tokens)
 
 ### Short-Sequence Fallback
 
-For sequences <1024 tokens, HSA automatically switches to **full attention** (no overhead). This ensures no performance penalty on short contexts.
+For sequences <1024 tokens, CWAB automatically switches to **full attention** (no overhead). This ensures no performance penalty on short contexts.
 
 
 
