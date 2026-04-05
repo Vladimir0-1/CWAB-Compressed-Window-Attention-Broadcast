@@ -1,5 +1,5 @@
 """
-Hybrid State-Space Attention (HSA) - Optimized
+Hybrid State-Space Attention (HSSA) - Optimized
 Author: Vladimir0-1
 License: MIT
 """
