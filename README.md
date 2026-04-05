@@ -61,7 +61,7 @@ Replace standard multi-head attention in any transformer.
 | Model | Final Loss |
 |-------|------------|
 | Standard Attention | 0.0006 |
-| HSA | 0.0001 |
+| HSSA | 0.0001 |
 
 ![Convergence](convergence_hssa.png)
 *Both models converge to comparable loss.*
@@ -79,7 +79,7 @@ Replace standard multi-head attention in any transformer.
 ## Quick Start
 
 
-from hsa import HybridStateSpaceAttention
+from hssa import HybridStateSpaceAttention
 
 # Replace your attention layer
 ```
@@ -126,7 +126,7 @@ HSSA can be extended to a multi-agent system where agents **work, sleep, and dre
 ### Example
 
 ```
-from hsa import SleepyAgentLegion
+from hssa import SleepyAgentLegion
 
 legion = SleepyAgentLegion(
     num_agents=7,
@@ -137,7 +137,7 @@ legion = SleepyAgentLegion(
 
 ### How It Works
 
-HSA combines four mechanisms to achieve linear complexity:
+HSSA combines four mechanisms to achieve linear complexity:
 ```
 Input Sequence (n tokens)
                    ↓
